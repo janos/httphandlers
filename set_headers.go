@@ -23,17 +23,6 @@ func SetHeadersHandler(h http.Handler, headers *map[string]string) http.Handler 
 	})
 }
 
-func SetHeadersDeferHandler(h http.Handler, headers *map[string]string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			for header, value := range *headers {
-				w.Header().Set(header, value)
-			}
-		}()
-		h.ServeHTTP(w, r)
-	})
-}
-
 func NoCacheHeadersHandler(h http.Handler) http.Handler {
 	return SetHeadersHandler(h, &noCacheHeaders)
 }
