@@ -65,6 +65,6 @@ func (l TLSListener) Accept() (net.Conn, error) {
 }
 
 func HTTPToHTTPSRedirectHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Location", "https://"+r.Host+r.URL.String())
+	w.Header().Set("Location", "https://"+r.Host+r.RequestURI)
 	w.WriteHeader(http.StatusMovedPermanently)
 }
