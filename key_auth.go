@@ -15,6 +15,7 @@ type KeyAuth struct {
 	Handler             http.Handler
 	UnauthorizedHandler http.Handler
 	Keys                map[string]bool
+	ValidateFunc        func(key string) bool
 	AuthorizeAll        bool
 	AuthorizedNetworks  []net.IPNet
 	HeaderName          string
@@ -58,6 +59,9 @@ func (h KeyAuth) authenticate(r *http.Request) bool {
 			if enabled, ok := h.Keys[key]; ok {
 				return enabled
 			}
+			if h.ValidateFunc != nil {
+				return h.ValidateFunc(key)
+			}
 		}
 	}
 
@@ -81,6 +85,9 @@ func (h KeyAuth) authenticate(r *http.Request) bool {
 		if key != "" {
 			if enabled, ok := h.Keys[key]; ok {
 				return enabled
+			}
+			if h.ValidateFunc != nil {
+				return h.ValidateFunc(key)
 			}
 		}
 	}
