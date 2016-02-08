@@ -82,6 +82,9 @@ func (h KeyAuth) authenticate(r *http.Request) bool {
 		}
 
 		key := string(creds[0])
+		if key == "" {
+			key = string(creds[1])
+		}
 		if key != "" {
 			if enabled, ok := h.Keys[key]; ok {
 				return enabled
