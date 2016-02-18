@@ -16,6 +16,7 @@ type KeyAuth struct {
 	UnauthorizedHandler http.Handler
 	Keys                map[string]bool
 	ValidateFunc        func(key string) bool
+	PostAuthFunc        func(key string, valid bool, w http.ResponseWriter, r *http.Request) bool
 	AuthorizeAll        bool
 	AuthorizedNetworks  []net.IPNet
 	HeaderName          string
@@ -27,7 +28,13 @@ func (h KeyAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.UnauthorizedHandler = http.HandlerFunc(defaultKeyAuthUnauthorizedHandler)
 	}
 
-	if h.authenticate(r) == false {
+	key, valid := h.authenticate(r)
+
+	if h.PostAuthFunc(key, valid, w, r) == false {
+		return
+	}
+
+	if !valid {
 		h.unauthorized(w, r)
 		return
 	}
@@ -35,9 +42,10 @@ func (h KeyAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.Handler.ServeHTTP(w, r)
 }
 
-func (h KeyAuth) authenticate(r *http.Request) bool {
+func (h KeyAuth) authenticate(r *http.Request) (key string, valid bool) {
 	if h.AuthorizeAll {
-		return true
+		valid = true
+		return
 	}
 
 	if len(h.AuthorizedNetworks) > 0 {
@@ -48,19 +56,22 @@ func (h KeyAuth) authenticate(r *http.Request) bool {
 		ip := net.ParseIP(host)
 		for _, network := range h.AuthorizedNetworks {
 			if network.Contains(ip) {
-				return true
+				valid = true
+				return
 			}
 		}
 	}
 
 	if h.HeaderName != "" {
-		key := r.Header.Get(h.HeaderName)
+		key = r.Header.Get(h.HeaderName)
 		if key != "" {
 			if enabled, ok := h.Keys[key]; ok {
-				return enabled
+				valid = enabled
+				return
 			}
 			if h.ValidateFunc != nil {
-				return h.ValidateFunc(key)
+				valid = h.ValidateFunc(key)
+				return
 			}
 		}
 	}
@@ -68,34 +79,36 @@ func (h KeyAuth) authenticate(r *http.Request) bool {
 	if h.BasicAuthRealm != "" {
 		auth := r.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, basicAuthScheme) {
-			return false
+			return
 		}
 
 		decoded, err := base64.StdEncoding.DecodeString(auth[len(basicAuthScheme):])
 		if err != nil {
-			return false
+			return
 		}
 
 		creds := bytes.SplitN(decoded, []byte(":"), 2)
 		if len(creds) != 2 {
-			return false
+			return
 		}
 
-		key := string(creds[0])
+		key = string(creds[0])
 		if key == "" {
 			key = string(creds[1])
 		}
 		if key != "" {
 			if enabled, ok := h.Keys[key]; ok {
-				return enabled
+				valid = enabled
+				return
 			}
 			if h.ValidateFunc != nil {
-				return h.ValidateFunc(key)
+				valid = h.ValidateFunc(key)
+				return
 			}
 		}
 	}
 
-	return false
+	return
 }
 
 func (h KeyAuth) unauthorized(w http.ResponseWriter, r *http.Request) {
