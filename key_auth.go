@@ -30,7 +30,7 @@ func (h KeyAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	key, valid := h.authenticate(r)
 
-	if h.PostAuthFunc(key, valid, w, r) == false {
+	if h.PostAuthFunc != nil && h.PostAuthFunc(key, valid, w, r) == false {
 		return
 	}
 
