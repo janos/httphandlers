@@ -55,7 +55,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.options.Hashed {
+	if (s.options.Hashed && !s.options.NoHashQueryStrings) ||
+		(s.options.Hashed && s.options.NoHashQueryStrings && len(r.URL.RawQuery) == 0) {
 		cPath := canonicalPath(p)
 		h, err := s.getHash(cPath)
 		if err != errNotRegularFile { // continue as usual if it is not a regular file
