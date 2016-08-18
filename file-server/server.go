@@ -20,11 +20,11 @@ type Server struct {
 	mu     sync.RWMutex
 }
 
-func New(root, dir string, options *Options) Server {
+func New(root, dir string, options *Options) *Server {
 	if options == nil {
 		options = &Options{}
 	}
-	return Server{
+	return &Server{
 		root: root,
 		dir:  dir,
 
