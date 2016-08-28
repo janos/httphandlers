@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-const basicAuthScheme string = "Basic "
-
 type KeyAuth struct {
 	Handler             http.Handler
 	UnauthorizedHandler http.Handler
