@@ -21,7 +21,7 @@ var (
 )
 
 type Options struct {
-	Hashed                bool
+	Hasher                Hasher
 	NoHashQueryStrings    bool
 	RedirectTrailingSlash bool
 	IndexPage             string
