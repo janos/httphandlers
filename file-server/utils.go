@@ -13,7 +13,8 @@ func redirect(w http.ResponseWriter, r *http.Request, location string) {
 		location += "?" + q
 	}
 	w.Header().Set("Location", location)
-	w.WriteHeader(http.StatusMovedPermanently)
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusFound)
 }
 
 func open(root, name string) (http.File, error) {
