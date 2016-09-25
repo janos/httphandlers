@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"time"
 )
 
 type conn struct {
@@ -31,15 +32,17 @@ func (c *conn) Read(b []byte) (int, error) {
 }
 
 type TLSListener struct {
-	net.Listener
+	*net.TCPListener
 	TLSConfig *tls.Config
 }
 
 func (l TLSListener) Accept() (net.Conn, error) {
-	c, err := l.Listener.Accept()
+	c, err := l.AcceptTCP()
 	if err != nil {
 		return nil, err
 	}
+	c.SetKeepAlive(true)
+	c.SetKeepAlivePeriod(3 * time.Minute)
 
 	b := make([]byte, 1)
 	_, err = c.Read(b)
